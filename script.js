@@ -18,7 +18,7 @@ let maze = [
     [1, 3, 1, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ];
-    
+
 //Populates the maze in the HTML
 for (let y of maze) {
     for (let x of y) {
@@ -101,58 +101,19 @@ setInterval(function() {
     }
 }, 10);
 
-document.addEventListener('keydown', keyDown);
+
+
+
+const startDiv = document.querySelector('.start');
+if (startDiv) {
+    startDiv.addEventListener('click', function() {
+        startDiv.style.display = 'none';
+        document.addEventListener('keydown', keyDown);
 document.addEventListener('keyup', keyUp);
-
-document.querySelector('.startDiv').addEventListener('click', () => {
-    document.querySelector('.startDiv').style.display = 'none'; // Hide the start screen
-    startGame(); // Call the game start function
-});
-
-function startGame() {
-    console.log("Game Started!");
-    generateMaze(); // Make sure this function exists
-    requestAnimationFrame(movePlayer); // Start player movement
-    setTimeout(moveEnemies, 700); // Start enemy movement
-}
-
-// the button to start the game
-document.addEventListener("DOMContentLoaded", () => {
-    const startDiv = document.querySelector(".startDiv");
-    const player = document.getElementById("player");
-
-    let playerX = 0;
-    let playerY = 0;
-
-    startDiv.addEventListener("click", () => {
-        startDiv.style.display = "none"; // Hide start screen
-        console.log("Game Started!");
     });
 
-    function movePlayer(direction) {
-        switch (direction) {
-            case "left":
-                playerX -= 40;
-                break;
-            case "up":
-                playerY -= 40;
-                break;
-            case "right":
-                playerX += 40;
-                break;
-            case "down":
-                playerY += 40;
-                break;
-        }
-        updatePlayerPosition();
-    }
+}
 
-    function updatePlayerPosition() {
-        player.style.transform = `translate(${playerX}px, ${playerY}px)`;
-    }
 
-    document.getElementById("lbttn").addEventListener("click", () => movePlayer("left"));
-    document.getElementById("ubttn").addEventListener("click", () => movePlayer("up"));
-    document.getElementById("rbttn").addEventListener("click", () => movePlayer("right"));
-    document.getElementById("dbttn").addEventListener("click", () => movePlayer("down"));
-});
+
+
