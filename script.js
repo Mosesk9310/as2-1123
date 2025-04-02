@@ -1,3 +1,4 @@
+
 let upPressed = false;
 let downPressed = false;
 let leftPressed = false;
@@ -78,42 +79,81 @@ const playerMouth = player.querySelector('.mouth');
 let playerTop = 0;
 let playerLeft = 0;
 
-setInterval(function() {
-    if(downPressed) {
-        playerTop++;
-        player.style.top = playerTop + 'px';
+setInterval(function () {
+    pointcheck();
+    if (downPressed) {
+        let position = player.getBoundingClientRect()
+        let newBottom = position.bottom + 1;
+        let btmL = document.elementFromPoint(position.left, newBottom);
+        let btmR = document.elementFromPoint(position.right, newBottom);
+        if (btmL.classList.contains('wall') == false && btmR.classList.contains('wall') == false) {
+            playerTop++;
+            player.style.top = playerTop + 'px';
+        }
         playerMouth.classList = 'down';
     }
-    else if(upPressed) {
-        playerTop--;
-        player.style.top = playerTop + 'px';
+    else if (upPressed) {
+        let position = player.getBoundingClientRect();
+        let newTop = position.top - 1;
+        let topL = document.elementFromPoint(position.left, newTop);
+        let topR = document.elementFromPoint(position.right, newTop);
+        if (topL.classList.contains('wall') == false && topR.classList.contains('wall') == false) {
+            playerTop--;
+            player.style.top = playerTop + 'px';
+        }
         playerMouth.classList = 'up';
     }
-    else if(leftPressed) {
-        playerLeft--;
-        player.style.left = playerLeft + 'px';
+    else if (leftPressed) {
+        let position = player.getBoundingClientRect();
+        let newLeft = position.left - 1;
+        let leftT = document.elementFromPoint(newLeft, position.top);
+        let leftB = document.elementFromPoint(newLeft, position.bottom);
+        if (leftT.classList.contains('wall') == false && leftB.classList.contains('wall') == false) {
+            playerLeft--;
+            player.style.left = playerLeft + 'px';
+        }
         playerMouth.classList = 'left';
     }
-    else if(rightPressed) {
-        playerLeft++;
-        player.style.left = playerLeft + 'px';
+
+    else if (rightPressed) {
+        let position = player.getBoundingClientRect();
+        let newRight = position.right + 1;
+        let rightT = document.elementFromPoint(newRight, position.top);
+        let rightB = document.elementFromPoint(newRight, position.bottom);
+        if (rightT.classList.contains('wall') == false && rightB.classList.contains('wall') == false) {
+            playerLeft++;
+            player.style.left = playerLeft + 'px';
+        }
         playerMouth.classList = 'right';
     }
 }, 10);
 
 
 
-
-const startDiv = document.querySelector('.start');
-if (startDiv) {
-    startDiv.addEventListener('click', function() {
-        startDiv.style.display = 'none';
-        document.addEventListener('keydown', keyDown);
-document.addEventListener('keyup', keyUp);
-    });
-
+function pointcheck() {
+    const position = player.getBoundingClientRect();
+    const points = document.querySelectorAll('.point');
+    console.log(points.length);
+    for (let i = 0; i < points.length; i++) {
+        let pos = points[i].getBoundingClientRect();
+        if (
+            position.right > pos.left &&
+            position.left < pos.right &&
+            position.bottom > pos.top &&
+            position.top < pos.bottom
+        ) {
+            points[i].classList.remove('point');
+        }
+    }
 }
 
 
+const startBttn = document.querySelector('#gamestart');
+startBttn.addEventListener('click', startgame);
 
+function startgame() {
+    startBttn.style.display = 'none';
+    document.addEventListener('keydown', keyDown);
+    document.addEventListener('keyup', keyUp);
+}
 
