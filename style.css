@@ -125,6 +125,7 @@ div p {
 }
 
 #player {
+    position: absolute;
     background-color: yellow;
     border-radius: 100%;
     position: relative;
