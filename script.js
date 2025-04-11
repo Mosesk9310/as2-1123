@@ -133,7 +133,7 @@ setInterval(function () {
 function pointcheck() {
     const position = player.getBoundingClientRect();
     const points = document.querySelectorAll('.point');
-    console.log(points.length);
+
     for (let i = 0; i < points.length; i++) {
         let pos = points[i].getBoundingClientRect();
         if (
@@ -143,17 +143,86 @@ function pointcheck() {
             position.top < pos.bottom
         ) {
             points[i].classList.remove('point');
+            points[i].style.background = 'none';
+
+            pointScoreTrack++; // Increase score
+            document.querySelector('.score p').textContent = pointScoreTrack; // Update scoreboard
         }
     }
 }
 
 
-const startBttn = document.querySelector('#gamestart');
-startBttn.addEventListener('click', startgame);
 
-function startgame() {
-    startBttn.style.display = 'none';
+
+// ======================================================================================================
+// Points Detection
+let pointScoreTrack = 0; //let start of game score = 0 always;
+let maxPoints = document.querySelectorAll('.score').length; //get the maximum points achiveable in the maze by selecting All '.point'.length and store it in maxPoints
+function pointCheck() {
+    const position = player.getBoundingClientRect(); //get player position
+    let points = document.querySelectorAll('.score'); //select all with class with points
+
+    if (points.length == 0) {
+        newLevelSound.play()
+        nextLevel();
+        randomNextLevel();
+    }
+
+    for (let i = 0; i < points.length; i++) {
+        let pos = points[i].getBoundingClientRect();
+        if (position.right > pos.left &&
+            position.left < pos.right &&
+            position.bottom > pos.top &&
+            position.top < pos.bottom
+        ) {
+            points[i].classList.remove('score');    //remove the class of the point when player touches it
+            points[i].style.background = 'none'; //remove the background of the point when player touches it
+            console.log('score Got')        //log the score got
+            pointScoreTrack++; //increment the score by 1 when player touches the point
+            console.log(pointScoreTrack); //log the score got
+            pointScoreTrack++;
+            document.querySelector('.score p').textContent = pointScoreTrack;
+        }
+    }
+};
+
+const startButton = document.querySelector('#gamestart');
+
+startButton.addEventListener('click', () => {
+
     document.addEventListener('keydown', keyDown);
     document.addEventListener('keyup', keyUp);
-}
+
+    waitTillStartEnemyMove = true;
+
+    const buttons = [
+        { id: "lbttn", press: () => leftPressed = true, release: () => leftPressed = false },
+        { id: "rbttn", press: () => rightPressed = true, release: () => rightPressed = false },
+        { id: "ubttn", press: () => upPressed = true, release: () => upPressed = false },
+        { id: "dbttn", press: () => downPressed = true, release: () => downPressed = false },
+    ];
+
+    buttons.forEach(btn => {
+        const el = document.getElementById(btn.id);
+        el.addEventListener('mousedown', btn.press);
+        el.addEventListener('mouseup', btn.release);
+        el.addEventListener('touchstart', btn.press);
+        el.addEventListener('touchend', btn.release);
+    });
+
+    startButton.style.display = 'none';
+
+    console.log('Game Started');
+});
+
+
+
+
+// ======================================================================================================
+// Enemy Detection
+
+
+
+
+
 
