@@ -225,16 +225,90 @@ document.getElementById('dbttn').addEventListener('mouseup', () => downPressed =
 window.addEventListener('keydown', keyDown);
 window.addEventListener('keyup', keyUp);
 
+
+
+
     startButton.style.display = 'none';
 
     console.log('Game Started');
 });
 
 
+// Enemy Movement (No speed or sound)
+let waitTillStartEnemyMove = false;
+let enemies = document.querySelectorAll('.enemy');
+
+// Function to generate a random direction (1 = Down, 2 = Up, 3 = Left, 4 = Right)
+function randomNumber() {
+    return Math.floor(Math.random() * 4) + 1;
+}
+
+// Function to handle enemy movement
+function moveEnemies() {
+    setInterval(function moveEnemy() {
+        if (!waitTillStartEnemyMove) return; // Don't move if the flag is false
+        enemies = document.querySelectorAll('.enemy');  // Update enemies in case new ones are added
+
+        enemies.forEach(enemy => {
+            let enemyPos = enemy.getBoundingClientRect();
+            let enemyTop = parseInt(enemy.style.top) || 0;
+            let enemyLeft = parseInt(enemy.style.left) || 0;
+            let direction = enemy.direction || randomNumber(); // Get or set initial random direction for each enemy
+
+            switch (direction) {
+                case 1: // MOVE DOWN
+                    let newBottom = enemyPos.bottom + 1;
+                    let btmL = document.elementFromPoint(enemyPos.left, newBottom);
+                    let btmR = document.elementFromPoint(enemyPos.right, newBottom);
+                    if (!btmL.classList.contains('wall') && !btmR.classList.contains('wall')) {
+                        enemyTop++;
+                        enemy.style.top = enemyTop + 'px';
+                    }
+                    break;
+                case 2: // MOVE UP
+                    let newTop = enemyPos.top - 1;
+                    let topL = document.elementFromPoint(enemyPos.left, newTop);
+                    let topR = document.elementFromPoint(enemyPos.right, newTop);
+                    if (!topL.classList.contains('wall') && !topR.classList.contains('wall')) {
+                        enemyTop--;
+                        enemy.style.top = enemyTop + 'px';
+                    }
+                    break;
+                case 3: // MOVE LEFT
+                    let newLeft = enemyPos.left - 1;
+                    let leftT = document.elementFromPoint(newLeft, enemyPos.top);
+                    let leftB = document.elementFromPoint(newLeft, enemyPos.bottom);
+                    if (!leftT.classList.contains('wall') && !leftB.classList.contains('wall')) {
+                        enemyLeft--;
+                        enemy.style.left = enemyLeft + 'px';
+                    }
+                    break;
+                case 4: // MOVE RIGHT
+                    let newRight = enemyPos.right + 1;
+                    let rightT = document.elementFromPoint(newRight, enemyPos.top);
+                    let rightB = document.elementFromPoint(newRight, enemyPos.bottom);
+                    if (!rightT.classList.contains('wall') && !rightB.classList.contains('wall')) {
+                        enemyLeft++;
+                        enemy.style.left = enemyLeft + 'px';
+                    }
+                    break;
+            }
+            enemy.direction = randomNumber(); // Update the direction randomly
+        });
+    }, 100); // Using a fixed interval for enemy movement, adjust as needed
+}
+
+// Start the game
+setTimeout(() => {
+    waitTillStartEnemyMove = true;
+    moveEnemies(); // Start enemy movement
+}, 3000);
+
+// Keyboard listeners
+document.addEventListener('keydown', keyDown);
+document.addEventListener('keyup', keyUp);
 
 
-// ======================================================================================================
-// Enemy Detection
 
 
 
