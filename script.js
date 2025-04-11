@@ -210,6 +210,21 @@ startButton.addEventListener('click', () => {
         el.addEventListener('touchend', btn.release);
     });
 
+    // On-screen button support
+document.getElementById('lbttn').addEventListener('mousedown', () => leftPressed = true);
+document.getElementById('rbttn').addEventListener('mousedown', () => rightPressed = true);
+document.getElementById('ubttn').addEventListener('mousedown', () => upPressed = true);
+document.getElementById('dbttn').addEventListener('mousedown', () => downPressed = true);
+
+// When mouse button is released
+document.getElementById('lbttn').addEventListener('mouseup', () => leftPressed = false);
+document.getElementById('rbttn').addEventListener('mouseup', () => rightPressed = false);
+document.getElementById('ubttn').addEventListener('mouseup', () => upPressed = false);
+document.getElementById('dbttn').addEventListener('mouseup', () => downPressed = false);
+
+window.addEventListener('keydown', keyDown);
+window.addEventListener('keyup', keyUp);
+
     startButton.style.display = 'none';
 
     console.log('Game Started');
