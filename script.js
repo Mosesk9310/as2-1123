@@ -4,7 +4,10 @@ let input = {
     down: false,
     left: false,
     right: false
+
 };
+
+
 
 
 // DOM Elements
@@ -51,7 +54,24 @@ const maze = [// will hold the current level's maze
     [1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
     [1, 3, 1, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+],
+levels = [
+    maze,
+    [
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 2, 0, 0, 0, 0, 0, 3, 0, 1],
+        [1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 3, 0, 0, 0, 0, 1, 0, 1],
+        [1, 0, 0, 0, 0, 3, 0, 0, 0, 1],
+        [1, 0, 1, 1, 1, 1, 1, 1, 3, 1],
+        [1, 3, 0, 0, 3, 3 ,3 ,3 ,3 ,1],
+        [1 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,1],
+        [1 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,1],
+        [1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1]
+    ]
 ];
+
+
 
 // Render Maze
 maze.flat().forEach((tile, index) => {
@@ -236,16 +256,16 @@ function moveEnemies() {
     });
 }
 
-function loadLevel(levelIndex) {
-    main.innerHTML = ''; // clear old maze
-    maze = levels[levelIndex];
+function loadLevel(index) {
+    main.innerHTML = '';
+    maze = levels[index];
+    currentLevelIndex = index;
 
-    // Reset score and positions
     score = 0;
     document.querySelector('.score p').textContent = score;
     enemies = [];
 
-    maze.flat().forEach((tile, index) => {
+    maze.flat().forEach((tile, i) => {
         const block = document.createElement('div');
         block.classList.add('block');
 
@@ -271,16 +291,44 @@ function loadLevel(levelIndex) {
         main.appendChild(block);
     });
 
-    // Reset player and enemy references
+    // Reset player and enemies
+    playerPosition = { top: 0, left: 0 };
     const newPlayer = document.getElementById('player');
     if (newPlayer) {
-        playerPosition = { top: 0, left: 0 };
-        player.style.top = '0px';
-        player.style.left = '0px';
+        newPlayer.style.top = '0px';
+        newPlayer.style.left = '0px';
     }
 
     enemies = document.querySelectorAll('.enemy');
 }
+
+function nextLevel() {
+    const nextIndexes = levels.map((_, i) => i).filter(i => i !== currentLevelIndex);
+    const randomIndex = nextIndexes[Math.floor(Math.random() * nextIndexes.length)];
+    loadLevel(randomIndex);
+}
+
+// Point Collection
+function checkPointCollection() {
+    const playerRect = player.getBoundingClientRect();
+    let points = document.querySelectorAll('.point');
+    points.forEach(point => {
+        const pointRect = point.getBoundingClientRect();
+        if (intersect(playerRect, pointRect)) {
+            point.classList.remove('point');
+            point.style.background = 'none';
+            score++;
+            document.querySelector('.score p').textContent = score;
+        }
+    });
+
+    // Check win condition
+    if (document.querySelectorAll('.point').length === 0) {
+        alert("Level Complete!");
+        nextLevel();
+    }
+}
+
 
 
 // Utility Functions
