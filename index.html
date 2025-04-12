@@ -17,12 +17,24 @@
     </header>
 
     <div class="startDiv">
-        <div id = "gamestart" class="start">
+        <div id="gamestart" class="start">
             <img src="images/icon.png" alt="logo">
             <h1>Start</h1>
         </div>
     </div>
-    
+
+    <div class="speed-select">
+        <label for="playerSpeed">Player Speed:</label>
+        <input type="range" id="playerSpeed" min="1" max="10" value="3">
+        <span id="playerSpeedValue">3</span>
+
+        <br>
+
+        <label for="enemySpeed">Enemy Speed:</label>
+        <input type="range" id="enemySpeed" min="1" max="10" value="2">
+        <span id="enemySpeedValue">2</span>
+    </div>
+
 
     <div class="leaderboard">
         <h1>LeaderBoard:</h1>
@@ -35,6 +47,13 @@
             <li>John3........35</li>
         </ol>
     </div>
+
+    <div class="level">Level:
+        <span id="levelNum">1</span>
+    </div>
+
+
+
 
     <main>
     </main>
