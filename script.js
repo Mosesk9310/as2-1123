@@ -54,22 +54,7 @@ const maze = [// will hold the current level's maze
     [1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
     [1, 3, 1, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-],
-levels = [
-    maze,
-    [
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 2, 0, 0, 0, 0, 0, 3, 0, 1],
-        [1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 3, 0, 0, 0, 0, 1, 0, 1],
-        [1, 0, 0, 0, 0, 3, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 1, 1, 1, 3, 1],
-        [1, 3, 0, 0, 3, 3 ,3 ,3 ,3 ,1],
-        [1 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,1],
-        [1 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,1],
-        [1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1]
-    ]
-];
+]
 
 
 
@@ -169,6 +154,89 @@ function movePlayer() {
     player.style.top = `${playerPosition.top}px`;
     player.style.left = `${playerPosition.left}px`;
 }
+document.addEventListener('DOMContentLoaded', () => {
+    const menu = document.querySelector('.puase');
+    const resumeBtn = document.getElementById('resume');
+    const restartBtn = document.getElementById('restart');
+    const exitBtn = document.getElementById('exit');
+    const mainMenuBtn = document.getElementById('mainMenu');
+
+    // Shortcuts
+    document.addEventListener('keydown', (e) => {
+        const key = e.key.toLowerCase();
+        console.log(`Key pressed: ${key}`);
+
+        switch (key) {
+            case 'p':
+                togglePause();
+                break;
+            case 'r':
+                if (isPaused()) restartGame();
+                break;
+            case 'e':
+                if (isPaused()) exitGame();
+                break;
+            case 'm':
+                if (isPaused()) returnToMainMenu();
+                break;
+        }
+    });
+
+    // Click handlers (for buttons)
+    resumeBtn.addEventListener('click', () => {
+        togglePause();
+    });
+
+    restartBtn.addEventListener('click', () => {
+        console.log("Restarting game...");
+    });
+
+    exitBtn.addEventListener('click', () => {
+        console.log("Exiting game...");
+    });
+
+    mainMenuBtn.addEventListener('click', () => {
+        console.log("Going to Main Menu...");
+    });
+
+    function togglePause() {
+        const isVisible = menu.classList.contains('visible');
+
+        if (isVisible) {
+            menu.classList.remove('visible');
+            resumeGame();
+        } else {
+            menu.classList.add('visible');
+            pauseGame();
+        }
+    }
+
+    function isPaused() {
+        return menu.classList.contains('visible');
+    }
+
+    function pauseGame() {
+        console.log("Game paused");
+        // Stop game loop here
+    }
+
+    function resumeGame() {
+        console.log("Game resumed");
+        // Resume game loop here
+    }
+
+    function restartGame() {
+        restartBtn.click();
+    }
+
+    function exitGame() {
+        exitBtn.click();
+    }
+
+    function returnToMainMenu() {
+        mainMenuBtn.click();
+    }
+});
 
 // Point Collection
 function checkPointCollection() {
@@ -256,16 +324,16 @@ function moveEnemies() {
     });
 }
 
-function loadLevel(index) {
-    main.innerHTML = '';
-    maze = levels[index];
-    currentLevelIndex = index;
+function loadLevel(levelIndex) {
+    main.innerHTML = ''; // clear old maze
+    maze = levels[levelIndex];
 
+    // Reset score and positions
     score = 0;
     document.querySelector('.score p').textContent = score;
     enemies = [];
 
-    maze.flat().forEach((tile, i) => {
+    maze.flat().forEach((tile, index) => {
         const block = document.createElement('div');
         block.classList.add('block');
 
@@ -291,44 +359,16 @@ function loadLevel(index) {
         main.appendChild(block);
     });
 
-    // Reset player and enemies
-    playerPosition = { top: 0, left: 0 };
+    // Reset player and enemy references
     const newPlayer = document.getElementById('player');
     if (newPlayer) {
-        newPlayer.style.top = '0px';
-        newPlayer.style.left = '0px';
+        playerPosition = { top: 0, left: 0 };
+        player.style.top = '0px';
+        player.style.left = '0px';
     }
 
     enemies = document.querySelectorAll('.enemy');
 }
-
-function nextLevel() {
-    const nextIndexes = levels.map((_, i) => i).filter(i => i !== currentLevelIndex);
-    const randomIndex = nextIndexes[Math.floor(Math.random() * nextIndexes.length)];
-    loadLevel(randomIndex);
-}
-
-// Point Collection
-function checkPointCollection() {
-    const playerRect = player.getBoundingClientRect();
-    let points = document.querySelectorAll('.point');
-    points.forEach(point => {
-        const pointRect = point.getBoundingClientRect();
-        if (intersect(playerRect, pointRect)) {
-            point.classList.remove('point');
-            point.style.background = 'none';
-            score++;
-            document.querySelector('.score p').textContent = score;
-        }
-    });
-
-    // Check win condition
-    if (document.querySelectorAll('.point').length === 0) {
-        alert("Level Complete!");
-        nextLevel();
-    }
-}
-
 
 
 // Utility Functions
