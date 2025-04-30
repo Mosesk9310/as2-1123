@@ -1,14 +1,14 @@
-// Game Control State
 let input = {
     up: false,
     down: false,
     left: false,
     right: false
-
 };
 
+let paused = false;
+let playerLives = 3;
 
-
+initializeLives(); // Initialize lives display when the game starts
 
 // DOM Elements
 const main = document.querySelector('main');
@@ -21,6 +21,46 @@ const enemySpeedValue = document.getElementById('enemySpeedValue');
 
 let playerSpeed = 3;
 let enemySpeed = 2;
+
+function initializeLives() {
+    const livesList = document.querySelector('.lives ul');
+    livesList.innerHTML = ''; // Clear the list before adding new lives
+
+    // Add the appropriate number of <li> elements based on playerLives
+    for (let i = 0; i < playerLives; i++) {
+        const li = document.createElement('li');
+        livesList.appendChild(li);
+    }
+}
+
+function updateLives() {
+    const livesList = document.querySelector('.lives ul');
+    const livesItems = livesList.querySelectorAll('li');
+
+    if (playerLives > 0) {
+        playerLives--;
+        console.log(`Lives left: ${playerLives}`);
+
+        if (livesItems.length > 0) {
+            livesItems[livesItems.length - 1].remove();
+        }
+
+        if (playerLives === 0) {
+            gameOver();
+        }
+    }
+}
+
+
+function gameLoop() {
+    if (!gameRunning || paused) return;
+
+    movePlayer();
+    checkPointCollection();
+    moveEnemies();
+
+    requestAnimationFrame(gameLoop);
+}
 
 playerSpeedInput.addEventListener('input', () => {
     playerSpeed = parseInt(playerSpeedInput.value);
@@ -41,7 +81,7 @@ const TILE = {
 
 // Maze Layout (2D Array)
 let currentLevel = 0;
- // will hold the current level's maze
+// Maze layout goes here
 
 const maze = [// will hold the current level's maze
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -56,7 +96,21 @@ const maze = [// will hold the current level's maze
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
-
+const levels = [
+    // Define different mazes for levels
+    [
+        [1, 1, 1, 1, 1],
+        [1, 2, 0, 1, 1],
+        [1, 0, 0, 0, 1],
+        [1, 1, 1, 0, 1]
+    ],
+    [
+        [1, 1, 1, 1, 1],
+        [1, 2, 0, 1, 0],
+        [1, 0, 0, 0, 1],
+        [1, 3, 0, 1, 1]
+    ]
+];
 
 // Render Maze
 maze.flat().forEach((tile, index) => {
@@ -120,13 +174,13 @@ buttons.forEach(btn => {
 
 // Game Loop
 function gameLoop() {
-    if (!gameRunning) return;
+    if (!gameRunning || paused) return;
 
     movePlayer();
     checkPointCollection();
     moveEnemies();
 
-    requestAnimationFrame(gameLoop); // Optimized animation frame
+    requestAnimationFrame(gameLoop);
 }
 
 // Player Movement
@@ -154,6 +208,7 @@ function movePlayer() {
     player.style.top = `${playerPosition.top}px`;
     player.style.left = `${playerPosition.left}px`;
 }
+
 document.addEventListener('DOMContentLoaded', () => {
     const menu = document.querySelector('.puase');
     const resumeBtn = document.getElementById('resume');
@@ -164,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Shortcuts
     document.addEventListener('keydown', (e) => {
         const key = e.key.toLowerCase();
-        console.log(`Key pressed: ${key}`);
+        if (['p', 'r', 'e', 'm'].includes(key)) e.preventDefault(); // Stops unwanted behavior
 
         switch (key) {
             case 'p':
@@ -211,32 +266,84 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function isPaused() {
-        return menu.classList.contains('visible');
-    }
-
     function pauseGame() {
         console.log("Game paused");
-        // Stop game loop here
+        paused = true;
+        main.classList.add('paused'); // Adds 'paused' class for pause visuals or blocking controls
     }
 
     function resumeGame() {
         console.log("Game resumed");
-        // Resume game loop here
+        paused = false;
+        requestAnimationFrame(gameLoop); // Resume the loop
+        main.classList.remove('paused'); // Removes 'paused' class
     }
 
     function restartGame() {
-        restartBtn.click();
+        console.log("Game restarting...");
+        gameRunning = false;
+        paused = false;
+        score = 0;
+        document.querySelector('.score p').textContent = score;
+
+        // Clear the current maze and reset everything
+        main.innerHTML = ''; // Clear maze
+        loadLevel(0); // Reload the initial level (or level 0)
+
+        // Reset player position
+        const player = document.getElementById('player');
+        player.style.top = '0px';
+        player.style.left = '0px';
+
+        // Reset enemies
+        enemies = document.querySelectorAll('.enemy');
+
+        // Start the game loop again
+        gameRunning = true;
+        startGame(); // Restart game loop
     }
 
     function exitGame() {
-        exitBtn.click();
+        console.log("Exiting game...");
+        gameRunning = false;
+        paused = false;
+
+        // Clear the maze and stop the game
+        main.innerHTML = ''; // Clear maze and any game state
+
+        // Display an exit message
+        const exitMessage = document.createElement('div');
+        exitMessage.textContent = "Game exited!";
+        exitMessage.classList.add('exit-message');
+        main.appendChild(exitMessage);
+
+        // After a short timeout, remove the message and reload the page (or redirect to a different page)
+        setTimeout(() => {
+            exitMessage.remove();
+            window.location.reload(); // Reload the page to reset everything
+        }, 2000);
     }
 
     function returnToMainMenu() {
-        mainMenuBtn.click();
+        console.log("Returning to main menu...");
+        gameRunning = false;
+        paused = false;
+        main.innerHTML = ''; // Clear the maze
+
+        // Optionally, reset the game settings or show a message
+        const mainMenuMessage = document.createElement('div');
+        mainMenuMessage.textContent = "Returned to main menu!";
+        mainMenuMessage.classList.add('main-menu-message');
+        main.appendChild(mainMenuMessage);
+
+        setTimeout(() => {
+            mainMenuMessage.remove();
+            // You can redirect to a main menu page if applicable
+        }, 2000);
     }
 });
+
+
 
 // Point Collection
 function checkPointCollection() {
@@ -260,6 +367,7 @@ function startGame() {
 }
 
 // Enemy AI Movement
+// Move enemies and check for collisions with the player
 function moveEnemies() {
     enemies.forEach(enemy => {
         const rect = enemy.getBoundingClientRect();
@@ -317,58 +425,78 @@ function moveEnemies() {
 
         enemy.direction = direction;
 
+        
+
+
+        // Check for collision with player and decrease one life
         if (intersect(player.getBoundingClientRect(), rect)) {
-            alert("Game Over! The enemy caught you.");
-            location.reload();
+            if (playerLives > 0) {
+                playerLives--; // Decrease lives on collision
+
+                // Update the lives display by removing one <li> for each lost life
+                const livesList = document.querySelector('.lives ul');
+                const livesItems = livesList.querySelectorAll('li');
+
+                // Remove one <li> element to reflect the lost life
+                if (livesItems.length > 0) {
+                    livesItems[livesItems.length - 1].remove();
+                }
+
+                // Check if game over
+                if (playerLives <= 0) {
+                    alert("Game Over! You ran out of lives.");
+                    location.reload(); // Restart the game
+                }
+            }
         }
     });
 }
 
-function loadLevel(levelIndex) {
-    main.innerHTML = ''; // clear old maze
-    maze = levels[levelIndex];
+function intersect(rect1, rect2) {
+    return (
+        rect1.right > rect2.left &&
+        rect1.left < rect2.right &&
+        rect1.bottom > rect2.top &&
+        rect1.top < rect2.bottom
+    );
+}
 
-    // Reset score and positions
-    score = 0;
-    document.querySelector('.score p').textContent = score;
-    enemies = [];
+function hitByEnemy() {
+    if (playerLives > 0) {
+        playerLives--;
 
-    maze.flat().forEach((tile, index) => {
-        const block = document.createElement('div');
-        block.classList.add('block');
-
-        switch (tile) {
-            case TILE.WALL:
-                block.classList.add('wall');
-                break;
-            case TILE.PLAYER:
-                block.id = 'player';
-                const mouth = document.createElement('div');
-                mouth.classList.add('mouth');
-                block.appendChild(mouth);
-                break;
-            case TILE.ENEMY:
-                block.classList.add('enemy');
-                break;
-            default:
-                block.classList.add('point');
-                block.style.height = '1vh';
-                block.style.width = '1vh';
+        // Update lives display
+        const livesList = document.querySelector('.lives ul');
+        const livesItems = livesList.querySelectorAll('li');
+        if (livesItems.length > 0) {
+            livesItems[livesItems.length - 1].remove();
         }
 
-        main.appendChild(block);
-    });
-
-    // Reset player and enemy references
-    const newPlayer = document.getElementById('player');
-    if (newPlayer) {
-        playerPosition = { top: 0, left: 0 };
-        player.style.top = '0px';
-        player.style.left = '0px';
+        if (playerLives <= 0) {
+            gameOver(); // Call custom game over screen
+        }
     }
-
-    enemies = document.querySelectorAll('.enemy');
 }
+
+
+function updateLives() {
+    const livesList = document.querySelector('.lives ul');
+    const livesItems = livesList.querySelectorAll('li');
+
+    if (playerLives > 0) {
+        playerLives--;
+        console.log(`Lives left: ${playerLives}`);
+
+        if (livesItems.length > 0) {
+            livesItems[livesItems.length - 1].remove();
+        }
+
+        if (playerLives === 0) {
+            gameOver(); // Custom function for end screen or alert
+        }
+    }
+}
+
 
 
 // Utility Functions
@@ -381,26 +509,11 @@ function hasWall(rect, direction) {
     };
     const [x1, y1, x2, y2] = checkPoints[direction];
     return document.elementFromPoint(x1, y1)?.classList.contains('wall') ||
-           document.elementFromPoint(x2, y2)?.classList.contains('wall');
+        document.elementFromPoint(x2, y2)?.classList.contains('wall');
 }
 
 function getRandomDirection() {
     return Math.floor(Math.random() * 4) + 1;
 }
 
-function intersect(rect1, rect2) {
-    return (
-        rect1.right > rect2.left &&
-        rect1.left < rect2.right &&
-        rect1.bottom > rect2.top &&
-        rect1.top < rect2.bottom
-    );
-}
-
 startButton.addEventListener('click', startGame);
-
-
-
-
-
-
