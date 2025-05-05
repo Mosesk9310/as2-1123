@@ -7,6 +7,7 @@ let input = {
 
 let paused = false;
 let playerLives = 3;
+let collisionCooldown = false; // Prevents multiple life loss in quick succession
 
 initializeLives(); // Initialize lives display when the game starts
 
@@ -215,6 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const restartBtn = document.getElementById('restart');
     const exitBtn = document.getElementById('exit');
     const mainMenuBtn = document.getElementById('mainMenu');
+    const startButton = document.getElementById('gamestart');
+    if (startButton) {
+        startButton.addEventListener('click', startGame);
+    }
 
     // Shortcuts
     document.addEventListener('keydown', (e) => {
@@ -347,17 +352,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Point Collection
 function checkPointCollection() {
+    // Update score and check point collection
     const playerRect = player.getBoundingClientRect();
+    
+    // Use a counter to track collected points
+    let pointsRemaining = 0;
+    
     document.querySelectorAll('.point').forEach(point => {
         const pointRect = point.getBoundingClientRect();
+        
         if (intersect(playerRect, pointRect)) {
-            point.classList.remove('point');
-            point.style.background = 'none';
+            point.classList.remove('point'); // Remove point from the board
+            point.style.background = 'none'; // Make sure it's not visible anymore
             score++;
             document.querySelector('.score p').textContent = score;
+        } else {
+            pointsRemaining++; // Count remaining points
         }
     });
+
+     // Check if all points have been collected
+    if (pointsRemaining === 0) {
+        gameWin(); // Call gameWin function to move to next level
+    }
 }
+
+    // Check if all points have been collected
+    if (pointsRemaining === 0) {
+        gameWin();
+    }
+
+function gameWin() {
+    if (currentLevel < levels.length - 1) {
+        // If there's a next level, load it
+        currentLevel++; // Increment level
+        loadLevel(currentLevel); // Load the next level
+        alert(`Congratulations! You've completed Level ${currentLevel}!`);
+    } else {
+        // If no more levels, show a win message
+        alert("Congratulations! You've completed all levels!");
+        // Optionally, reset to level 1 or reload the game
+        location.reload(); // Reload or move to a win screen
+    }
+}
+
+
+
+
 
 // Start Game
 function startGame() {
@@ -365,6 +406,7 @@ function startGame() {
     startButton.style.display = 'none';
     requestAnimationFrame(gameLoop); // Start the game loop
 }
+
 
 // Enemy AI Movement
 // Move enemies and check for collisions with the player
@@ -425,31 +467,50 @@ function moveEnemies() {
 
         enemy.direction = direction;
 
-        
-
-
-        // Check for collision with player and decrease one life
-        if (intersect(player.getBoundingClientRect(), rect)) {
-            if (playerLives > 0) {
-                playerLives--; // Decrease lives on collision
-
-                // Update the lives display by removing one <li> for each lost life
-                const livesList = document.querySelector('.lives ul');
-                const livesItems = livesList.querySelectorAll('li');
-
-                // Remove one <li> element to reflect the lost life
-                if (livesItems.length > 0) {
-                    livesItems[livesItems.length - 1].remove();
-                }
-
-                // Check if game over
-                if (playerLives <= 0) {
-                    alert("Game Over! You ran out of lives.");
-                    location.reload(); // Restart the game
-                }
-            }
+        // Collision detection with cooldown
+        const playerRect = player.getBoundingClientRect();
+        if (intersect(playerRect, rect) && !collisionCooldown) {
+            handlePlayerHit();
         }
     });
+}
+
+
+function gameOver() {
+    alert("Game Over! You ran out of lives.");
+    location.reload();
+}
+
+function getRandomDirection() {
+    return Math.floor(Math.random() * 4) + 1;
+}
+
+function hasWall(rect, side) {
+    // Replace with actual wall detection logic
+    return false;
+}
+
+// Check for collision with player and decrease one life
+if (intersect(player.getBoundingClientRect(), rect)) {
+    if (playerLives > 0) {
+        playerLives--; // Decrease lives on collision
+
+        // Update the lives display by removing one <li> for each lost life
+        const livesList = document.querySelector('.lives ul');
+        const livesItems = livesList.querySelectorAll('li');
+
+        // Remove one <li> element to reflect the lost life
+        if (livesItems.length > 0) {
+            livesItems[livesItems.length - 1].remove();
+        }
+
+        // Check if game over
+        if (playerLives <= 0) {
+            alert("Game Over! You ran out of lives.");
+            location.reload(); // Restart the game
+        }
+
+    }
 }
 
 function intersect(rect1, rect2) {
@@ -478,6 +539,21 @@ function hitByEnemy() {
     }
 }
 
+function gameOver() {
+    alert("Game Over! You ran out of lives.");
+    location.reload(); // Or navigate to a game over screen
+}
+
+// Example helper: Random direction generator (1-4)
+function getRandomDirection() {
+    return Math.floor(Math.random() * 4) + 1;
+}
+
+// Dummy example function — replace with real logic
+function hasWall(rect, side) {
+    // Implement your wall-checking logic here based on rect and side (top, bottom, left, right)
+    return false; // No walls by default
+}
 
 function updateLives() {
     const livesList = document.querySelector('.lives ul');

@@ -46,6 +46,7 @@ body {
         "lboard main controls";
     align-items: center;
     justify-items: center;
+    overflow: hidden;
 }
 
 header {
@@ -207,8 +208,8 @@ div p {
     background-color: yellow;
     border-radius: 100%;
     position: relative;
-    width: 85%;
-    height: 85%;
+    width: 80%;
+    height: 80%;
     transition: transform 0.2s ease-in-out;
 }
 
@@ -303,7 +304,7 @@ div p {
     text-shadow: 2px 2px 0 #000;
     color: yellow;
 }
-
+/* Pause Menu Button Styles */
 .puase button {
     width: 150px;
     padding: 0.7rem;
