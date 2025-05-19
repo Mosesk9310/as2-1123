@@ -7,6 +7,7 @@ let input = {
 
 let paused = false;
 let playerLives = 3;
+let playermaxLives = 5; // Maximum lives
 let collisionCooldown = false; // Prevents multiple life loss in quick succession
 
 initializeLives(); // Initialize lives display when the game starts
@@ -58,10 +59,13 @@ function gameLoop() {
 
     movePlayer();
     checkPointCollection();
+    checkLifeItemCollection(); // 🆕 Check for life pickups
     moveEnemies();
 
     requestAnimationFrame(gameLoop);
 }
+
+
 
 playerSpeedInput.addEventListener('input', () => {
     playerSpeed = parseInt(playerSpeedInput.value);
@@ -173,15 +177,11 @@ buttons.forEach(btn => {
     el.addEventListener('touchend', () => input[btn.direction] = false);
 });
 
-// Game Loop
-function gameLoop() {
-    if (!gameRunning || paused) return;
 
-    movePlayer();
-    checkPointCollection();
-    moveEnemies();
-
-    requestAnimationFrame(gameLoop);
+function loadLevel(index) {
+    maze = levels[index];
+    currentLevel = index;
+    renderMaze();
 }
 
 // Player Movement
@@ -221,10 +221,11 @@ document.addEventListener('DOMContentLoaded', () => {
         startButton.addEventListener('click', startGame);
     }
 
+
     // Shortcuts
     document.addEventListener('keydown', (e) => {
         const key = e.key.toLowerCase();
-        if (['p', 'r', 'e', 'm'].includes(key)) e.preventDefault(); // Stops unwanted behavior
+        if (['p', 'r', 'e', 'm'].includes(key)) e.preventDefault();
 
         switch (key) {
             case 'p':
@@ -242,22 +243,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Click handlers (for buttons)
-    resumeBtn.addEventListener('click', () => {
-        togglePause();
-    });
-
-    restartBtn.addEventListener('click', () => {
-        console.log("Restarting game...");
-    });
-
-    exitBtn.addEventListener('click', () => {
-        console.log("Exiting game...");
-    });
-
-    mainMenuBtn.addEventListener('click', () => {
-        console.log("Going to Main Menu...");
-    });
+    resumeBtn.addEventListener('click', togglePause);
+    restartBtn.addEventListener('click', restartGame);
+    exitBtn.addEventListener('click', exitGame);
+    mainMenuBtn.addEventListener('click', returnToMainMenu);
 
     function togglePause() {
         const isVisible = menu.classList.contains('visible');
@@ -271,21 +260,82 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
+     // Click handlers (for buttons)
+    resumeBtn.addEventListener('click', () => {
+        togglePause();
+        resumeGame();
+    });
+
+    restartBtn.addEventListener('click', () => {
+        togglePause();
+        restartGame();
+    });
+
+    exitBtn.addEventListener('click', () => {
+        togglePause();
+        exitGame();
+    });
+
+    mainMenuBtn.addEventListener('click', () => {
+        togglePause();
+        returnToMainMenu();
+    });
+
+    // Toggle Pause Menu
+
+    function togglePause() {
+        const isVisible = menu.classList.contains('visible');
+
+        if (isVisible) {
+            menu.classList.remove('visible');
+            resumeGame();
+        } else {
+            menu.classList.add('visible');
+            pauseGame();
+        }
+    }
+
+
     function pauseGame() {
         console.log("Game paused");
         paused = true;
         main.classList.add('paused'); // Adds 'paused' class for pause visuals or blocking controls
     }
 
-    function resumeGame() {
+     function resumeGame() {
         console.log("Game resumed");
         paused = false;
         requestAnimationFrame(gameLoop); // Resume the loop
         main.classList.remove('paused'); // Removes 'paused' class
     }
 
+    const restartButton = document.querySelector('.restart');
+    restartButton.style.display = 'none';
+
+
     function restartGame() {
         console.log("Game restarting...");
+        const enemies = document.querySelectorAll('.enemy');
+
+        for (const enemy of enemies) {
+            enemy.classList.remove('enemy')
+        }
+        waitTillStartEnemyMove = false;
+        playerTop = 0;
+        playerLeft = 0;
+
+        upPressed = false;
+        downPressed = false;
+        leftPressed = false;
+        rightPressed = false;
+        pausePressed = false;
+
+
+        restartButton.style.display = 'flex';
+        document.removeEventListener('keydown', keyDown);
+        document.removeEventListener('keyup', keyUp);
+        player.classList.add('dead');
         gameRunning = false;
         paused = false;
         score = 0;
@@ -295,10 +345,21 @@ document.addEventListener('DOMContentLoaded', () => {
         main.innerHTML = ''; // Clear maze
         loadLevel(0); // Reload the initial level (or level 0)
 
+        // Spawn enemies explicitly if loadLevel doesn't do this
+        spawnEnemies();  // Make sure you have this function defined
+
+
         // Reset player position
         const player = document.getElementById('player');
-        player.style.top = '0px';
-        player.style.left = '0px';
+        if (player) {
+            player.classList.remove('dead');
+            player.style.top = '0px';
+            player.style.left = '0px';
+        }
+
+        // Re-enable input listeners
+        document.addEventListener('keydown', keyDown);
+        document.addEventListener('keyup', keyUp);
 
         // Reset enemies
         enemies = document.querySelectorAll('.enemy');
@@ -329,6 +390,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2000);
     }
 
+    function spawnEnemies() {
+        // Example: create 3 enemies at fixed positions
+        for (let i = 0; i < 3; i++) {
+            const enemy = document.createElement('div');
+            enemy.classList.add('enemy');
+            enemy.style.top = (i * 50) + 'px';
+            enemy.style.left = (i * 100) + 'px';
+            main.appendChild(enemy);
+        }
+    }
+
+
     function returnToMainMenu() {
         console.log("Returning to main menu...");
         gameRunning = false;
@@ -346,6 +419,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // You can redirect to a main menu page if applicable
         }, 2000);
     }
+    function isPaused() {
+        return paused === true;
+    }
 });
 
 
@@ -354,13 +430,13 @@ document.addEventListener('DOMContentLoaded', () => {
 function checkPointCollection() {
     // Update score and check point collection
     const playerRect = player.getBoundingClientRect();
-    
+
     // Use a counter to track collected points
     let pointsRemaining = 0;
-    
+
     document.querySelectorAll('.point').forEach(point => {
         const pointRect = point.getBoundingClientRect();
-        
+
         if (intersect(playerRect, pointRect)) {
             point.classList.remove('point'); // Remove point from the board
             point.style.background = 'none'; // Make sure it's not visible anymore
@@ -371,16 +447,16 @@ function checkPointCollection() {
         }
     });
 
-     // Check if all points have been collected
+    // Check if all points have been collected
     if (pointsRemaining === 0) {
         gameWin(); // Call gameWin function to move to next level
     }
 }
 
-    // Check if all points have been collected
-    if (pointsRemaining === 0) {
-        gameWin();
-    }
+// Check if all points have been collected
+if (pointsRemaining === 0) {
+    gameWin();
+}
 
 function gameWin() {
     if (currentLevel < levels.length - 1) {
@@ -476,10 +552,7 @@ function moveEnemies() {
 }
 
 
-function gameOver() {
-    alert("Game Over! You ran out of lives.");
-    location.reload();
-}
+
 
 function getRandomDirection() {
     return Math.floor(Math.random() * 4) + 1;
@@ -525,6 +598,8 @@ function intersect(rect1, rect2) {
 function hitByEnemy() {
     if (playerLives > 0) {
         playerLives--;
+        console.log("Ouch! Lives left:", lives);
+
 
         // Update lives display
         const livesList = document.querySelector('.lives ul');
@@ -536,6 +611,60 @@ function hitByEnemy() {
         if (playerLives <= 0) {
             gameOver(); // Call custom game over screen
         }
+    }
+}
+
+function dropLifeItem(x, y) {
+    const life = document.createElement('div');
+    life.classList.add('life-item');
+    life.style.position = 'absolute';
+    life.style.top = `${y}px`;
+    life.style.left = `${x}px`;
+    main.appendChild(life);
+
+    // Animate or timeout the life item (optional)
+    setTimeout(() => {
+        if (main.contains(life)) {
+            life.remove(); // Remove after 10 seconds if not collected
+        }
+    }, 10000);
+}
+
+function defeatEnemy(enemy) {
+    const rect = enemy.getBoundingClientRect();
+
+    // Remove enemy from the game
+    enemy.remove();
+
+    // 30% chance to drop a life item
+    if (Math.random() < 0.3) {
+        dropLifeItem(rect.left, rect.top);
+    }
+}
+
+function checkLifeItemCollection() {
+    const playerRect = player.getBoundingClientRect();
+
+    document.querySelectorAll('.life-item').forEach(item => {
+        const itemRect = item.getBoundingClientRect();
+        if (intersect(playerRect, itemRect)) {
+            item.remove(); // Remove life item
+            playerLives++; // Increase player lives
+            initializeLives(); // Re-render lives display
+        }
+    });
+}
+
+
+// Called when the player collects a special heart item
+function collectHeart() {
+    if (lives < maxLives) {
+        lives++;
+        console.log("Extra life collected! Lives:", lives);
+    } else {
+        // Optional: give bonus score if already full lives
+        score += 50;
+        console.log("Bonus points! Score:", score);
     }
 }
 

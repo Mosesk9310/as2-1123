@@ -272,6 +272,15 @@ div p {
     height: 70vh;
 }
 
+.life-item {
+    width: 20px;
+    height: 20px;
+    background: red;
+    border-radius: 50%;
+    z-index: 10;
+}
+
+
 /* Pause Menu Styles */
 .puase {
     position: absolute;
