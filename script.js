@@ -126,17 +126,47 @@ const levels = [
     ]
 ];
 
-function generateRandomMaze() {
-    for (let y of maze) {
-        for (let x of y) {
-            let block = document.createElement('div');
-            block.classList.add('block');
+function generateRandomMaze(rows, cols) {
+    const newMaze = [];
 
-            switch (x) {
+    for (let y = 0; y < rows; y++) {
+        let row = [];
+        for (let x = 0; x < cols; x++) {
+            if (y === 0 || x === 0 || y === rows - 1 || x === cols - 1) {
+                row.push(1); // Wall border
+            } else {
+                row.push(Math.random() < 0.2 ? 1 : 0); // 20% chance wall, else point
+            }
+        }
+        newMaze.push(row);
+    }
+
+   
+// Add 3 enemies
+    let enemiesPlaced = 0;
+    while (enemiesPlaced < 3) {
+        let ry = Math.floor(Math.random() * rows);
+        let rx = Math.floor(Math.random() * cols);
+        if (newMaze[ry][rx] === 0) {
+            newMaze[ry][rx] = 3;
+            enemiesPlaced++;
+        }
+    }
+
+    return newMaze;
+}
+
+// Render the maze
+
+function renderMaze(mazeData) {
+    main.innerHTML = '';
+    for (let row of mazeData) {
+        for (let cell of row) {
+            const block = document.createElement('div');
+            block.classList.add('block');
+            switch (cell) {
                 case 1:
-                    if (document.querySelectorAll('.wall').length < 56) {
-                        block.classList.add('wall');
-                    }
+                    block.classList.add('wall');
                     break;
                 case 2:
                     block.id = 'player';
@@ -145,20 +175,23 @@ function generateRandomMaze() {
                     block.appendChild(mouth);
                     break;
                 case 3:
-                    if (document.querySelectorAll('.enemy').length < 5) {
-                        block.classList.add('enemy');
-                    }
+                    block.classList.add('enemy');
                     break;
                 default:
                     block.classList.add('point');
                     block.style.height = '1vh';
                     block.style.width = '1vh';
             }
-
             main.appendChild(block);
         }
     }
 }
+// Initialize the maze
+function initializeMaze() {
+    maze = levels[currentLevel];
+    renderMaze(maze);
+}
+    
 
 
 // Render Maze
@@ -387,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.removeEventListener('keydown', keyDown);
         document.removeEventListener('keyup', keyUp);
 
-       
+
         // Re-add listeners
         document.addEventListener('keydown', keyDown);
         document.addEventListener('keyup', keyUp);
@@ -519,6 +552,58 @@ function updatePlayerPosition() {
 }
 
 
+function nextLevel() {
+    waitTillStartEnemyMove = false;
+    upPressed = downPressed = leftPressed = rightPressed = false;
+    playerTop = playerLeft = 0;
+
+    maze = generateRandomMaze(10, 10); // 10x10 grid
+    renderMaze(maze);
+
+    document.removeEventListener('keydown', keyDown);
+    document.removeEventListener('keyup', keyUp);
+
+    startGame();
+}
+
+
+function updateLeaderboard() {
+    let leaderboardElement = document.querySelector('.leaderboard ol');
+    let scores = JSON.parse(localStorage.getItem('scores')) || [];
+
+    scores.sort((a, b) => b[1] - a[1]);
+    leaderboardElement.innerHTML = '';
+
+    scores.slice(0, 5).forEach(([name, score], i) => {
+        let li = document.createElement('li');
+        li.textContent = `${name} ........ ${score}`;
+        if (i === 0) li.style.color = 'gold';
+        leaderboardElement.appendChild(li);
+    });
+}
+
+function topFiveLocalStorage() {
+    let playerName = sessionStorage.getItem('playerName') || prompt('What is your name?');
+
+    if (!playerName) return;
+    sessionStorage.setItem('playerName', playerName);
+
+    let scores = JSON.parse(localStorage.getItem('scores')) || [];
+    const existing = scores.find(score => score[0] === playerName);
+
+    if (existing) {
+        if (pointScoreTrack > existing[1]) {
+            existing[1] = pointScoreTrack;
+        }
+    } else {
+        scores.push([playerName, pointScoreTrack]);
+    }
+
+    scores.sort((a, b) => b[1] - a[1]);
+    localStorage.setItem('scores', JSON.stringify(scores.slice(0, 5)));
+
+    updateLeaderboard();
+}
 
 
 // Start Game
