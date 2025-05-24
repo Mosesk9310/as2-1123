@@ -10,7 +10,6 @@ let playerLives = 3;
 let playermaxLives = 5; // Maximum lives
 let collisionCooldown = false; // Prevents multiple life loss in quick succession
 
-initializeLives(); // Initialize lives display when the game starts
 
 // DOM Elements
 const main = document.querySelector('main');
@@ -84,11 +83,21 @@ const TILE = {
     POINT: 0
 };
 
+function startNewLevel() {
+    main.innerHTML = ''; // Clear the old level
+    nextButton.style.display = 'none'; // Hide next button if used
+
+    generateRandomMaze(); // Create and display the maze
+    startGame();          // Start player controls
+    moveEnemy();          // Start enemy movement
+    pointCheck();         // Start checking for point collection
+}
+
 // Maze Layout (2D Array)
 let currentLevel = 0;
 // Maze layout goes here
 
-const maze = [// will hold the current level's maze
+let maze = [// will hold the current level's maze
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 2, 0, 1, 0, 0, 0, 0, 3, 1],
     [1, 0, 0, 0, 0, 0, 0, 1, 1, 1],
@@ -117,6 +126,41 @@ const levels = [
     ]
 ];
 
+function generateRandomMaze() {
+    for (let y of maze) {
+        for (let x of y) {
+            let block = document.createElement('div');
+            block.classList.add('block');
+
+            switch (x) {
+                case 1:
+                    if (document.querySelectorAll('.wall').length < 56) {
+                        block.classList.add('wall');
+                    }
+                    break;
+                case 2:
+                    block.id = 'player';
+                    const mouth = document.createElement('div');
+                    mouth.classList.add('mouth');
+                    block.appendChild(mouth);
+                    break;
+                case 3:
+                    if (document.querySelectorAll('.enemy').length < 5) {
+                        block.classList.add('enemy');
+                    }
+                    break;
+                default:
+                    block.classList.add('point');
+                    block.style.height = '1vh';
+                    block.style.width = '1vh';
+            }
+
+            main.appendChild(block);
+        }
+    }
+}
+
+
 // Render Maze
 maze.flat().forEach((tile, index) => {
     const block = document.createElement('div');
@@ -143,9 +187,8 @@ maze.flat().forEach((tile, index) => {
 
     main.appendChild(block);
 });
-
 // Player Setup
-const player = document.getElementById('player');
+let player = document.getElementById('player');
 const playerMouth = player.querySelector('.mouth');
 
 let playerPosition = { top: 0, left: 0 };
@@ -344,11 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.removeEventListener('keydown', keyDown);
         document.removeEventListener('keyup', keyUp);
 
-        // Reset level
-        main.innerHTML = '';
-        loadLevel(0);        // Redraw map
-        spawnEnemies();      // Add enemies again
-
+       
         // Re-add listeners
         document.addEventListener('keydown', keyDown);
         document.addEventListener('keyup', keyUp);
@@ -443,22 +482,41 @@ function checkPointCollection() {
 
 
 function gameWin() {
+    alert(`Level Complete!`);
+
+    // Optional: If you're tracking levels
     if (levels.length > 1) {
         let nextLevel;
         do {
             nextLevel = Math.floor(Math.random() * levels.length);
-        } while (nextLevel === currentLevel); // Avoid repeating the current level
+        } while (nextLevel === currentLevel);
 
         currentLevel = nextLevel;
-        loadLevel(currentLevel); // Load the random next level
-        alert(`Level Complete! Loading a random next level (Level ${currentLevel + 1})`);
-    } else {
-        alert("Congratulations! You've completed all levels!");
-        location.reload(); // Or go to a win screen
     }
+
+    // Clear the game board before loading new one
+    main.innerHTML = '';
+    score = 0; // Optionally reset score or continue from current
+    document.querySelector('.score p').textContent = score;
+
+    // Now load the new level
+    randomNextLevel();
+}
+function randomNextLevel() {
+    let next;
+    do {
+        next = Math.floor(Math.random() * levels.length);
+    } while (next === currentLevel);
+    loadLevel(next);
 }
 
 
+function updatePlayerPosition() {
+    if (!player) return;
+    player.style.position = 'absolute';
+    player.style.top = `${playerPosition.top}px`;
+    player.style.left = `${playerPosition.left}px`;
+}
 
 
 
