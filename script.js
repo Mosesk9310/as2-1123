@@ -59,7 +59,7 @@ function gameLoop() {
 
     movePlayer();
     checkPointCollection();
-    checkLifeItemCollection(); // 🆕 Check for life pickups
+    checkLifeItemCollection(); // Check for life pickups
     moveEnemies();
 
     requestAnimationFrame(gameLoop);
@@ -261,9 +261,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-     // Click handlers (for buttons)
+    // Click handlers (for buttons)
     resumeBtn.addEventListener('click', () => {
-        togglePause();
         resumeGame();
     });
 
@@ -303,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         main.classList.add('paused'); // Adds 'paused' class for pause visuals or blocking controls
     }
 
-     function resumeGame() {
+    function resumeGame() {
         console.log("Game resumed");
         paused = false;
         requestAnimationFrame(gameLoop); // Resume the loop
@@ -315,15 +314,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function restartGame() {
-        console.log("Game restarting...");
-        const enemies = document.querySelectorAll('.enemy');
+        console.log("Restarting game...");
 
-        for (const enemy of enemies) {
-            enemy.classList.remove('enemy')
-        }
-        waitTillStartEnemyMove = false;
+        // Remove all enemies from DOM
+        document.querySelectorAll('.enemy').forEach(e => e.remove());
+
+        // Reset game state
         playerTop = 0;
         playerLeft = 0;
+        score = 0;
+        gameRunning = false;
+        paused = false;
+        waitTillStartEnemyMove = false;
 
         upPressed = false;
         downPressed = false;
@@ -331,43 +333,31 @@ document.addEventListener('DOMContentLoaded', () => {
         rightPressed = false;
         pausePressed = false;
 
-
-        restartButton.style.display = 'flex';
-        document.removeEventListener('keydown', keyDown);
-        document.removeEventListener('keyup', keyUp);
-        player.classList.add('dead');
-        gameRunning = false;
-        paused = false;
-        score = 0;
+        // Reset visuals
+        restartButton.style.display = 'none';
+        player.classList.remove('dead');
+        player.style.top = '0px';
+        player.style.left = '0px';
         document.querySelector('.score p').textContent = score;
 
-        // Clear the current maze and reset everything
-        main.innerHTML = ''; // Clear maze
-        loadLevel(0); // Reload the initial level (or level 0)
+        // Remove listeners to avoid duplicates
+        document.removeEventListener('keydown', keyDown);
+        document.removeEventListener('keyup', keyUp);
 
-        // Spawn enemies explicitly if loadLevel doesn't do this
-        spawnEnemies();  // Make sure you have this function defined
+        // Reset level
+        main.innerHTML = '';
+        loadLevel(0);        // Redraw map
+        spawnEnemies();      // Add enemies again
 
-
-        // Reset player position
-        const player = document.getElementById('player');
-        if (player) {
-            player.classList.remove('dead');
-            player.style.top = '0px';
-            player.style.left = '0px';
-        }
-
-        // Re-enable input listeners
+        // Re-add listeners
         document.addEventListener('keydown', keyDown);
         document.addEventListener('keyup', keyUp);
 
-        // Reset enemies
-        enemies = document.querySelectorAll('.enemy');
-
-        // Start the game loop again
+        // Resume game
         gameRunning = true;
-        startGame(); // Restart game loop
+        startGame();
     }
+
 
     function exitGame() {
         console.log("Exiting game...");
@@ -428,10 +418,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Point Collection
 function checkPointCollection() {
-    // Update score and check point collection
     const playerRect = player.getBoundingClientRect();
 
-    // Use a counter to track collected points
     let pointsRemaining = 0;
 
     document.querySelectorAll('.point').forEach(point => {
@@ -447,30 +435,29 @@ function checkPointCollection() {
         }
     });
 
-    // Check if all points have been collected
+    //  Check after processing all points
     if (pointsRemaining === 0) {
-        gameWin(); // Call gameWin function to move to next level
+        gameWin();
     }
 }
 
-// Check if all points have been collected
-if (pointsRemaining === 0) {
-    gameWin();
-}
 
 function gameWin() {
-    if (currentLevel < levels.length - 1) {
-        // If there's a next level, load it
-        currentLevel++; // Increment level
-        loadLevel(currentLevel); // Load the next level
-        alert(`Congratulations! You've completed Level ${currentLevel}!`);
+    if (levels.length > 1) {
+        let nextLevel;
+        do {
+            nextLevel = Math.floor(Math.random() * levels.length);
+        } while (nextLevel === currentLevel); // Avoid repeating the current level
+
+        currentLevel = nextLevel;
+        loadLevel(currentLevel); // Load the random next level
+        alert(`Level Complete! Loading a random next level (Level ${currentLevel + 1})`);
     } else {
-        // If no more levels, show a win message
         alert("Congratulations! You've completed all levels!");
-        // Optionally, reset to level 1 or reload the game
-        location.reload(); // Reload or move to a win screen
+        location.reload(); // Or go to a win screen
     }
 }
+
 
 
 
@@ -645,15 +632,26 @@ function defeatEnemy(enemy) {
 function checkLifeItemCollection() {
     const playerRect = player.getBoundingClientRect();
 
-    document.querySelectorAll('.life-item').forEach(item => {
-        const itemRect = item.getBoundingClientRect();
-        if (intersect(playerRect, itemRect)) {
-            item.remove(); // Remove life item
-            playerLives++; // Increase player lives
-            initializeLives(); // Re-render lives display
+    document.querySelectorAll('.life-item').forEach(life => {
+        const lifeRect = life.getBoundingClientRect();
+
+        if (intersect(playerRect, lifeRect)) {
+            // Increase lives only if below max
+            if (playerLives < playermaxLives) {
+                playerLives++;
+
+                // Add a life indicator
+                const livesList = document.querySelector('.lives ul');
+                const li = document.createElement('li');
+                livesList.appendChild(li);
+            }
+
+            // Remove the collected life item
+            life.remove();
         }
     });
 }
+
 
 
 // Called when the player collects a special heart item
