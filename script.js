@@ -72,7 +72,7 @@ const TILE = {
 let currentLevel = 0;
 // Maze layout goes here
 
-let maze = [// will hold the current level's maze
+const maze = [// will hold the current level's maze
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 2, 0, 1, 0, 0, 0, 0, 3, 1],
     [1, 0, 0, 0, 0, 0, 0, 1, 1, 1],
@@ -85,21 +85,25 @@ let maze = [// will hold the current level's maze
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
-let levels = [
-    // Define different mazes for levels
+const levels = [
     [
-        [1, 1, 1, 1, 1],
-        [1, 2, 0, 1, 1],
-        [1, 0, 0, 0, 1],
-        [1, 1, 1, 0, 1]
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 2, 0, 0, 3, 0, 1],
+        [1, 0, 1, 1, 0, 0, 1],
+        [1, 0, 0, 0, 0, 3, 1],
+        [1, 1, 1, 1, 1, 1, 1]
     ],
     [
-        [1, 1, 1, 1, 1],
-        [1, 2, 0, 1, 0],
-        [1, 0, 0, 0, 1],
-        [1, 3, 0, 1, 1]
-    ]
+        [1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 2, 0, 0, 3, 0, 0, 1],
+        [1, 0, 1, 1, 0, 1, 0, 1],
+        [1, 0, 3, 0, 0, 3, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1]
+    ],
+    // Add more levels here when needed
 ];
+
+
 
 // Render Maze
 
