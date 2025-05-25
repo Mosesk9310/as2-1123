@@ -9,6 +9,7 @@ let paused = false;
 let playerLives = 3;
 let playermaxLives = 5; // Maximum lives
 let collisionCooldown = false; // Prevents multiple life loss in quick succession
+let playerCanMove = true;
 
 initializeLives(); // Initialize lives display when the game starts
 
@@ -35,23 +36,6 @@ function initializeLives() {
     }
 }
 
-function updateLives() {
-    const livesList = document.querySelector('.lives ul');
-    const livesItems = livesList.querySelectorAll('li');
-
-    if (playerLives > 0) {
-        playerLives--;
-        console.log(`Lives left: ${playerLives}`);
-
-        if (livesItems.length > 0) {
-            livesItems[livesItems.length - 1].remove();
-        }
-
-        if (playerLives === 0) {
-            gameOver();
-        }
-    }
-}
 
 
 function gameLoop() {
@@ -88,7 +72,7 @@ const TILE = {
 let currentLevel = 0;
 // Maze layout goes here
 
-const maze = [// will hold the current level's maze
+let maze = [// will hold the current level's maze
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 2, 0, 1, 0, 0, 0, 0, 3, 1],
     [1, 0, 0, 0, 0, 0, 0, 1, 1, 1],
@@ -101,7 +85,7 @@ const maze = [// will hold the current level's maze
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
-const levels = [
+let levels = [
     // Define different mazes for levels
     [
         [1, 1, 1, 1, 1],
@@ -118,6 +102,7 @@ const levels = [
 ];
 
 // Render Maze
+
 maze.flat().forEach((tile, index) => {
     const block = document.createElement('div');
     block.classList.add('block');
@@ -143,6 +128,8 @@ maze.flat().forEach((tile, index) => {
 
     main.appendChild(block);
 });
+
+
 
 // Player Setup
 const player = document.getElementById('player');
@@ -186,6 +173,7 @@ function loadLevel(index) {
 
 // Player Movement
 function movePlayer() {
+    if (!playerCanMove || paused) return;
     const pos = player.getBoundingClientRect();
 
     const directionChecks = {
@@ -320,8 +308,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.enemy').forEach(e => e.remove());
 
         // Reset game state
-        playerTop = 0;
-        playerLeft = 0;
+        playerPosition.top = 0;
+        playerPosition.left = 0;
+
         score = 0;
         gameRunning = false;
         paused = false;
@@ -388,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
             enemy.style.top = (i * 50) + 'px';
             enemy.style.left = (i * 100) + 'px';
             main.appendChild(enemy);
+            enemies = document.querySelectorAll('.enemy'); // refresh enemy list
         }
     }
 
@@ -533,48 +523,41 @@ function moveEnemies() {
         // Collision detection with cooldown
         const playerRect = player.getBoundingClientRect();
         if (intersect(playerRect, rect) && !collisionCooldown) {
-            collisionCooldown = true;
-            updateLives();
-            setTimeout(() => collisionCooldown = false, 1000); // 1 second cooldown
+            handlePlayerHit(); // This handles life loss with cooldown
         }
+
+
+
+
 
     });
 }
 
+function handlePlayerHit() {
+    if (collisionCooldown) return;
 
+    collisionCooldown = true;
 
+    playerLives--;   // Decrement once here
+    console.log(`Lives left: ${playerLives}`);
 
-function getRandomDirection() {
-    return Math.floor(Math.random() * 4) + 1;
-}
+    updateLives();   // Just update the UI
 
-function hasWall(rect, side) {
-    // Replace with actual wall detection logic
-    return false;
-}
+    player.classList.add('hit'); // Add visual feedback
 
-// Check for collision with player and decrease one life
-if (intersect(player.getBoundingClientRect(), rect)) {
-    if (playerLives > 0) {
-        playerLives--; // Decrease lives on collision
-
-        // Update the lives display by removing one <li> for each lost life
-        const livesList = document.querySelector('.lives ul');
-        const livesItems = livesList.querySelectorAll('li');
-
-        // Remove one <li> element to reflect the lost life
-        if (livesItems.length > 0) {
-            livesItems[livesItems.length - 1].remove();
-        }
-
-        // Check if game over
-        if (playerLives <= 0) {
-            alert("Game Over! You ran out of lives.");
-            location.reload(); // Restart the game
-        }
-
+    if (playerLives <= 0) {
+        gameOver();
+        return;
     }
+
+    setTimeout(() => {
+        collisionCooldown = false;
+        playerCanMove = true; // Re-enable movement
+        player.classList.remove('hit');
+    }, 2000);
 }
+
+
 
 function intersect(rect1, rect2) {
     return (
@@ -613,6 +596,11 @@ function defeatEnemy(enemy) {
         dropLifeItem(rect.left, rect.top);
     }
 }
+//  check if the player is powered up and collides with an enemy
+if (intersect(playerRect, enemyRect) && playerIsPoweredUp) {
+    defeatEnemy(enemy);
+}
+
 
 function checkLifeItemCollection() {
     const playerRect = player.getBoundingClientRect();
@@ -621,6 +609,8 @@ function checkLifeItemCollection() {
         const lifeRect = life.getBoundingClientRect();
 
         if (intersect(playerRect, lifeRect)) {
+            collectHeart(); // Call the function to handle heart collection
+            life.remove(); // Remove the life item from the game
             // Increase lives only if below max
             if (playerLives < playermaxLives) {
                 playerLives++;
@@ -631,8 +621,6 @@ function checkLifeItemCollection() {
                 livesList.appendChild(li);
             }
 
-            // Remove the collected life item
-            life.remove();
         }
     });
 }
@@ -643,11 +631,15 @@ function checkLifeItemCollection() {
 function collectHeart() {
     if (playerLives < playermaxLives) {
         playerLives++;
-        initializeLives(); // Refresh display
+        const livesList = document.querySelector('.lives ul');
+        const li = document.createElement('li');
+        livesList.appendChild(li);
+        console.log("Collected a heart! Lives:", playerLives);
     } else {
-        score += 10; // Optional bonus
+        console.log("Already at max lives.");
     }
 }
+
 
 
 function gameOver() {
@@ -660,18 +652,12 @@ function getRandomDirection() {
     return Math.floor(Math.random() * 4) + 1;
 }
 
-// Dummy example function — replace with real logic
-function hasWall(rect, side) {
-    // Implement your wall-checking logic here based on rect and side (top, bottom, left, right)
-    return false; // No walls by default
-}
 
 function updateLives() {
     const livesList = document.querySelector('.lives ul');
     const livesItems = livesList.querySelectorAll('li');
 
     if (playerLives > 0) {
-        playerLives--;
         console.log(`Lives left: ${playerLives}`);
 
         if (livesItems.length > 0) {
@@ -679,10 +665,11 @@ function updateLives() {
         }
 
         if (playerLives === 0) {
-            gameOver(); // Custom function for end screen or alert
+            gameOver();
         }
     }
 }
+
 
 
 
@@ -699,8 +686,5 @@ function hasWall(rect, direction) {
         document.elementFromPoint(x2, y2)?.classList.contains('wall');
 }
 
-function getRandomDirection() {
-    return Math.floor(Math.random() * 4) + 1;
-}
 
 startButton.addEventListener('click', startGame);
