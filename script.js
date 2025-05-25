@@ -533,8 +533,11 @@ function moveEnemies() {
         // Collision detection with cooldown
         const playerRect = player.getBoundingClientRect();
         if (intersect(playerRect, rect) && !collisionCooldown) {
-            handlePlayerHit();
+            collisionCooldown = true;
+            updateLives();
+            setTimeout(() => collisionCooldown = false, 1000); // 1 second cooldown
         }
+
     });
 }
 
@@ -582,24 +585,6 @@ function intersect(rect1, rect2) {
     );
 }
 
-function hitByEnemy() {
-    if (playerLives > 0) {
-        playerLives--;
-        console.log("Ouch! Lives left:", lives);
-
-
-        // Update lives display
-        const livesList = document.querySelector('.lives ul');
-        const livesItems = livesList.querySelectorAll('li');
-        if (livesItems.length > 0) {
-            livesItems[livesItems.length - 1].remove();
-        }
-
-        if (playerLives <= 0) {
-            gameOver(); // Call custom game over screen
-        }
-    }
-}
 
 function dropLifeItem(x, y) {
     const life = document.createElement('div');
@@ -656,15 +641,14 @@ function checkLifeItemCollection() {
 
 // Called when the player collects a special heart item
 function collectHeart() {
-    if (lives < maxLives) {
-        lives++;
-        console.log("Extra life collected! Lives:", lives);
+    if (playerLives < playermaxLives) {
+        playerLives++;
+        initializeLives(); // Refresh display
     } else {
-        // Optional: give bonus score if already full lives
-        score += 50;
-        console.log("Bonus points! Score:", score);
+        score += 10; // Optional bonus
     }
 }
+
 
 function gameOver() {
     alert("Game Over! You ran out of lives.");

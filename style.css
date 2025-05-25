@@ -117,22 +117,22 @@ main {
 .lives {
     margin-top: 10px;
 }
-
+/* Lives styling */
 .lives span {
     transition: transform 0.2s ease;
 }
-
+/* Hover effect for lives */
 .lives span:hover {
     transform: scale(1.2);
 }
-
+/* Block styles */
 .block.life {
     background-color: lightpink;
     font-size: 20px;
     border-radius: 8px;
 }
 
-
+/* Header styling */
 .level {
     position: absolute;
     top: 10px;
@@ -197,19 +197,19 @@ div h1 {
     font-size: 1.25em;
     text-decoration: underline;
 }
-
+/* Scoreboard styles */
 div p {
     margin: 0.5em;
     font-size: 2em;
 }
-
+/* Player, Enemy, Point, and Wall styles */
 #player {
     position: absolute;
     background-color: yellow;
     border-radius: 100%;
     position: relative;
-    width: 80%;
-    height: 80%;
+    width: 75%;
+    height: 75%;
     transition: transform 0.2s ease-in-out;
 }
 
@@ -222,7 +222,7 @@ div p {
     position: relative;
 
 }
-
+/* Point styles */
 .point {
     border-radius: 100%;
     background-color: white;
@@ -338,7 +338,7 @@ div p {
 }
 
 
-
+/* Animation for the mouth of the player */
 
 @keyframes mouth {
 
@@ -376,11 +376,11 @@ button {
     cursor: pointer;
     transition: background 0.2s;
 }
-
+/* Button hover effect */
 button:hover {
     background-color: rgb(50, 50, 50);
 }
-
+/* Button active effect */
 button:nth-child(1) {
     grid-area: leftArrow;
 }
@@ -388,7 +388,7 @@ button:nth-child(1) {
 button:nth-child(2) {
     grid-area: upArrow;
 }
-
+/* Button active effect */
 button:nth-child(3) {
     grid-area: rightArrow;
 }
@@ -396,7 +396,7 @@ button:nth-child(3) {
 button:nth-child(4) {
     grid-area: downArrow;
 }
-
+/* Button active effect */
 @keyframes deathAnimation {
     0% {
         transform: scale(1);
@@ -410,7 +410,7 @@ button:nth-child(4) {
         transform: scale(0);
     }
 }
-
+/* Animation for the hit effect */
 @keyframes hitAnimation {
 
     0%,
