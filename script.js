@@ -129,15 +129,14 @@ maze.flat().forEach((tile, index) => {
     main.appendChild(block);
 });
 
-// Initial leaderboard entries
-let leaderboard = [
-  { name: 'Moses K', score: 100 },
-  { name: 'Mark', score: 75 },
-  { name: 'Tom', score: 50 },
-  { name: 'John', score: 45 },
-  { name: 'John2', score: 40 },
-  { name: 'John3', score: 35 }
-];
+
+// Load leaderboard from localStorage or start with empty array
+let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+
+// Function to save leaderboard to localStorage
+function saveLeaderboard() {
+  localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+}
 
 // Function to render leaderboard in the HTML
 function renderLeaderboard() {
@@ -147,24 +146,58 @@ function renderLeaderboard() {
   // Sort entries by score descending
   leaderboard.sort((a, b) => b.score - a.score);
 
-  leaderboard.forEach(entry => {
+  leaderboard.forEach((entry, index) => {
     const li = document.createElement('li');
     li.textContent = `${entry.name} ........ ${entry.score}`;
+    if (index === 4) {
+      li.style.color = 'yellow'; // Highlight 5th place in red
+    }
+    if (index === 1) {
+      li.style.color = 'pink'; // Highlight 5th place in red
+    }
+    if (index === 0) {
+      li.style.color = 'green'; // Highlight 5th place in red
+    }
+    if (index === 3) {
+      li.style.color = 'blue'; // Highlight 5th place in red
+    }
+    if (index === 2) {
+      li.style.color = 'orange'; // Highlight 5th place in red
+    }
     leaderboardList.appendChild(li);
   });
 }
 
-// Render once on page load
+// Render leaderboard on page load
 renderLeaderboard();
 
-
+// Function to add a new score and player name from prompt, then update leaderboard
 function addNewScore(finalScore) {
   let playerName = prompt("Game Over! Enter your name for the leaderboard:", "Player");
   if (!playerName) playerName = "Player";
 
-  leaderboard.push({ name: playerName, score: finalScore });
-  renderLeaderboard();
+  // Check if player already on leaderboard
+  const existingIndex = leaderboard.findIndex(entry => entry.name === playerName);
+
+  if (existingIndex !== -1) {
+    // Update score if new score is higher
+    if (finalScore > leaderboard[existingIndex].score) {
+      leaderboard[existingIndex].score = finalScore;
+    }
+  } else {
+    // Add new player
+    leaderboard.push({ name: playerName, score: finalScore });
+  }
+
+  // Keep only top 5 scores
+  leaderboard.sort((a, b) => b.score - a.score);
+  leaderboard = leaderboard.slice(0, 5);
+
+  saveLeaderboard();    // Save updated leaderboard
+  renderLeaderboard();  // Update display
 }
+
+
 
 
 // Player Setup
@@ -338,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function restartGame() {
+        startGame();
         console.log("Restarting game...");
 
         // Remove all enemies from DOM
@@ -692,6 +726,17 @@ function gameOver() {
 function getRandomDirection() {
     return Math.floor(Math.random() * 4) + 1;
 }
+
+function updateScore(newScore) {
+  const scoreDisplay = document.querySelector('.score p');
+  scoreDisplay.textContent = newScore;
+}
+
+function updateLevel(newLevel) {
+  const levelNum = document.getElementById('levelNum');
+  levelNum.textContent = newLevel;
+}
+
 
 
 function updateLives() {
