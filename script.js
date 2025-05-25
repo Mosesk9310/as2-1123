@@ -129,6 +129,42 @@ maze.flat().forEach((tile, index) => {
     main.appendChild(block);
 });
 
+// Initial leaderboard entries
+let leaderboard = [
+  { name: 'Moses K', score: 100 },
+  { name: 'Mark', score: 75 },
+  { name: 'Tom', score: 50 },
+  { name: 'John', score: 45 },
+  { name: 'John2', score: 40 },
+  { name: 'John3', score: 35 }
+];
+
+// Function to render leaderboard in the HTML
+function renderLeaderboard() {
+  const leaderboardList = document.getElementById('leaderboard-list');
+  leaderboardList.innerHTML = ''; // Clear existing entries
+
+  // Sort entries by score descending
+  leaderboard.sort((a, b) => b.score - a.score);
+
+  leaderboard.forEach(entry => {
+    const li = document.createElement('li');
+    li.textContent = `${entry.name} ........ ${entry.score}`;
+    leaderboardList.appendChild(li);
+  });
+}
+
+// Render once on page load
+renderLeaderboard();
+
+
+function addNewScore(finalScore) {
+  let playerName = prompt("Game Over! Enter your name for the leaderboard:", "Player");
+  if (!playerName) playerName = "Player";
+
+  leaderboard.push({ name: playerName, score: finalScore });
+  renderLeaderboard();
+}
 
 
 // Player Setup
@@ -549,6 +585,7 @@ function handlePlayerHit() {
         gameOver();
         return;
     }
+    
 
     setTimeout(() => {
         collisionCooldown = false;
@@ -644,6 +681,10 @@ function collectHeart() {
 
 function gameOver() {
     alert("Game Over! You ran out of lives.");
+    addNewScore(score); // Add score to leaderboard
+    gameRunning = false;
+    paused = false;
+    main.innerHTML = ''; // Clear the maze  
     location.reload(); // Or navigate to a game over screen
 }
 
